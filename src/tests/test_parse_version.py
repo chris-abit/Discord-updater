@@ -1,4 +1,5 @@
-from discord_update import parse_version
+import pytest
+from discord_updater import parse_version
 
 
 @pytest.mark.parametrize(
@@ -43,3 +44,13 @@ def test_parse_version_ignores_alphabet_chars():
 def test_parse_version_empty_string_is_invalid():
     with pytest.raises(ValueError):
         parse_version("")
+
+
+def test_parse_version_to_few_commas_raises_error():
+    with pytest.raises(ValueError):
+        parse_version("10.0")
+
+
+def test_parse_version_to_many_commas_raises_error():
+    with pytest.raises(ValueError):
+        parse_version("10.0.1.0")
