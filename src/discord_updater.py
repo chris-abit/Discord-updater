@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 
 def is_ver_char(char):
@@ -27,9 +28,13 @@ def parse_version(string):
     return version
 
 
-
 def get_current_version(path):
     """
     Retrieve current version of discord.
     """
-    pass
+    if not Path(path).exists():
+        return 0
+    with open(path) as f:
+        content = json.loads(f.read())
+    version = parse_version(content["version"])
+    return version
