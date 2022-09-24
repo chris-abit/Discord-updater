@@ -34,7 +34,7 @@ class Test_get_current_version:
         with the current version.
         """
         f = tmp_path / "build_info.json"
-        f_version = 0.20
-        version = f"0.{f_version:0.2f}"
+        expected_version = 0.0020
+        version = "0.0.20"
         f.write_text(json.dumps({"version": version}))
-        assert f_version == get_current_version(f)
+        assert expected_version == get_current_version(f)
