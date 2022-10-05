@@ -6,7 +6,37 @@ DISCORD_V_PATH: Location where discord version is kept
 """
 import pytest
 import json
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
+from threading import Thread
+import requests
 from discord_updater import get_current_version
+
+
+SERVER_NAME = "localhost"
+SERVER_PORT = 8080
+SERVER_URL = f"http://{SERVER_NAME}:{SERVER_PORT}/"
+
+
+@pytest.fixture(scope="module")
+def file_server(tmp_path_factory):
+    handler = SimpleHTTPRequestHandler
+    server_address = (SERVER_NAME, SERVER_PORT)
+    server_dir = tmp_path_factory.mktemp("server")
+    tmp_files = sorted(server_dir.glob("*"))
+    with HTTPServer(server_address, handler) as httpd:
+        httpd.timeout = 1
+        print("Serving at port", SERVER_PORT)
+        yield httpd
+    print("Server is dead!")
+
+
+def handle_request(server):
+    """
+    Creates a thread which runs handle_request on the server.
+    """
+    x = Thread(target=server.handle_request)
+    x.start()
 
 
 class Test_get_current_version:
@@ -38,3 +68,13 @@ class Test_get_current_version:
         version = "0.0.20"
         f.write_text(json.dumps({"version": version}))
         assert expected_version == get_current_version(f)
+
+
+def test_serve(file_server, tmp_path):
+    f = tmp_path / "a_random_file.txt"
+    f.touch()
+    handle_request(file_server)
+    r = requests.get(SERVER_URL)
+    print(f"{r=}")
+    print(f"{x.is_alive()=}")
+    assert False
