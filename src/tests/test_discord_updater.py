@@ -74,7 +74,6 @@ def test_serve(file_server, tmp_path):
     f = tmp_path / "a_random_file.txt"
     f.touch()
     handle_request(file_server)
-    r = requests.get(SERVER_URL)
+    r = requests.get(SERVER_URL + "index.html")
     print(f"{r=}")
-    print(f"{x.is_alive()=}")
     assert False
