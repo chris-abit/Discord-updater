@@ -4,11 +4,11 @@ change. Hurray.
 
 DISCORD_V_PATH: Location where discord version is kept
 """
-import pytest
 import json
+import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-from pathlib import Path
 from threading import Thread
+import pytest
 import requests
 from discord_updater import get_current_version
 
@@ -20,14 +20,29 @@ SERVER_URL = f"http://{SERVER_NAME}:{SERVER_PORT}/"
 
 @pytest.fixture(scope="module")
 def file_server(tmp_path_factory):
+    """
+    Start a basic HTTP server wich serves files from a temporary
+    directory.
+    Create files for the server using the returned server_dir
+    which is an instance of Path (see pathlib).
+    Relies on os.chdir to ensure that the HTTPServer only works
+    out of the tmp_path_factory. This is a quick hack as
+    SimpleHTTPRequestHandler relies on os.getcwd() to set the working
+    directory.
+    Yields a pair of the server instance and a Path object.
+    """
+    """
+    TODO: Consider subclassing HTTPServer with a custom init
+    and finish_request. See DualStackServer in server.py.
+    """
     handler = SimpleHTTPRequestHandler
     server_address = (SERVER_NAME, SERVER_PORT)
     server_dir = tmp_path_factory.mktemp("server")
-    tmp_files = sorted(server_dir.glob("*"))
+    os.chdir(server_dir.resolve())
     with HTTPServer(server_address, handler) as httpd:
         httpd.timeout = 1
         print("Serving at port", SERVER_PORT)
-        yield httpd
+        yield httpd, server_dir
     print("Server is dead!")
 
 
@@ -70,10 +85,11 @@ class Test_get_current_version:
         assert expected_version == get_current_version(f)
 
 
-def test_serve(file_server, tmp_path):
-    f = tmp_path / "a_random_file.txt"
-    f.touch()
-    handle_request(file_server)
-    r = requests.get(SERVER_URL + "index.html")
-    print(f"{r=}")
-    assert False
+def test_server_does_not_serve_local(file_server):
+    """
+    Verify that the fileserver does not serve local content.
+    """
+    server, path = file_server
+    handle_request(server)
+    r = requests.get(SERVER_URL + __file__)
+    assert r.status_code == requests.codes.not_found
