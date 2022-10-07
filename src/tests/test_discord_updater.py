@@ -96,4 +96,5 @@ def test_server_does_not_serve_local(file_server):
 
 
 class Test_get_latest_version:
-    def test_retreives_
+    def test_retreives_float(self):
+        pass
