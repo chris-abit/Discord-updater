@@ -43,7 +43,7 @@ def file_server(tmp_path_factory):
         httpd.timeout = 1
         print("Serving at port", SERVER_PORT)
         yield httpd, server_dir
-    print("Server is dead!")
+    print("Server is terminated!")
 
 
 def handle_request(server):
@@ -93,3 +93,7 @@ def test_server_does_not_serve_local(file_server):
     handle_request(server)
     r = requests.get(SERVER_URL + __file__)
     assert r.status_code == requests.codes.not_found
+
+
+class Test_get_latest_version:
+    def test_retreives_
