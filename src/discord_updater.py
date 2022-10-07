@@ -1,5 +1,11 @@
 import json
+import subprocess
 from pathlib import Path
+import requests
+
+
+DISCORD_V_PATH = "/usr/share/discord/resources/build_info.json"
+DISCORD_URL = "https://discord.com/api/download?platform=linux&format=deb"
 
 
 def is_ver_char(char):
@@ -38,3 +44,25 @@ def get_current_version(path):
         content = json.loads(f.read())
     version = parse_version(content["version"])
     return version
+
+
+def update():
+    c_version = get_current_version(DISCORD_V_PATH)
+    r = requests.get(DISCORD_URL, allow_redirects=False)
+    source = r.headers["location"]
+    version = source.rsplit("-", 1)[1].rpartition(".")[0]
+    version = parse_version(version)
+    target = Path().home() / "Downloads/Discord.deb"
+    if c_version == version:
+        print("Discord is the latest version.")
+        return
+    r = requests.get(source, stream=True)
+    with target.open("wb") as f:
+        for chunk in r.iter_content(chunk_size=128):
+            f.write(chunk)
+    subprocess.run(["sudo", "apt", "install", target])
+    print("Discord update complete.")
+
+
+if __name__ == "__main__":
+    update()
