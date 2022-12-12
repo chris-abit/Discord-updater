@@ -37,6 +37,7 @@ def parse_version(string):
 def get_current_version(path):
     """
     Retrieve current version of discord.
+    Returns 0 if path does not exist.
     """
     if not Path(path).exists():
         return 0
